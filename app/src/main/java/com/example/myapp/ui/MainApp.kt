@@ -34,8 +34,10 @@ import com.example.myapp.ui.screens.ForgotPasswordScreen
 import com.example.myapp.ui.screens.HomeScreen
 import com.example.myapp.ui.screens.LoginScreen
 import com.example.myapp.ui.screens.OtpScreen
+import com.example.myapp.ui.screens.PackageInclusionsScreen
 import com.example.myapp.ui.screens.RegisterScreen
 import com.example.myapp.ui.screens.ResetPasswordScreen
+import com.example.myapp.ui.screens.ServiceDetailScreen
 import com.example.myapp.ui.theme.MyappTheme
 import com.example.myapp.ui.theme.PrimaryBlue
 import com.example.myapp.ui.theme.ScreenBackground
@@ -49,7 +51,9 @@ enum class Screen {
     FORGOT_PASSWORD,
     OTP,
     RESET_PASSWORD,
-    HOME
+    HOME,
+    SERVICE_DETAIL,
+    PACKAGE_INCLUSIONS
 }
 
 @Composable
@@ -58,6 +62,9 @@ fun MainApp() {
     var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
     var userEmailForReset by remember { mutableStateOf("") }
     var loggedInUserName by remember { mutableStateOf("Nguyễn Trần Tài Phương") }
+    var selectedServiceTitle by remember { mutableStateOf("Dịch vụ chăm sóc xe") }
+    var selectedPackageTitle by remember { mutableStateOf("Dịch vụ cơ bản") }
+    var selectedPackagePrice by remember { mutableStateOf("800.000 VND") }
     var isNavigating by remember { mutableStateOf(false) }
 
     fun navigateTo(target: Screen, actionBeforeNav: () -> Unit = {}) {
@@ -78,6 +85,8 @@ fun MainApp() {
             Screen.FORGOT_PASSWORD -> Screen.LOGIN
             Screen.OTP -> Screen.FORGOT_PASSWORD
             Screen.RESET_PASSWORD -> Screen.OTP
+            Screen.PACKAGE_INCLUSIONS -> Screen.SERVICE_DETAIL
+            Screen.SERVICE_DETAIL -> Screen.HOME
             Screen.HOME -> Screen.LOGIN
             Screen.LOGIN -> Screen.LOGIN
         }
@@ -92,13 +101,6 @@ fun MainApp() {
                 .background(ScreenBackground)
         ) {
             when (currentScreen) {
-                Screen.HOME -> HomeScreen(
-                    userName = loggedInUserName,
-                    onLogout = {
-                        navigateTo(Screen.LOGIN)
-                    }
-                )
-
                 Screen.LOGIN -> LoginScreen(
                     onNavigateToRegister = {
                         navigateTo(Screen.REGISTER)
@@ -110,6 +112,39 @@ fun MainApp() {
                         navigateTo(Screen.HOME) {
                             loggedInUserName = if (user.name.isNotBlank()) user.name else "Nguyễn Trần Tài Phương"
                         }
+                    }
+                )
+
+                Screen.HOME -> HomeScreen(
+                    userName = loggedInUserName,
+                    onLogout = {
+                        navigateTo(Screen.LOGIN)
+                    },
+                    onSelectService = { serviceTitle ->
+                        navigateTo(Screen.SERVICE_DETAIL) {
+                            selectedServiceTitle = serviceTitle
+                        }
+                    }
+                )
+
+                Screen.SERVICE_DETAIL -> ServiceDetailScreen(
+                    serviceTitle = selectedServiceTitle,
+                    onBack = {
+                        navigateTo(Screen.HOME)
+                    },
+                    onSelectPackage = { pkgTitle, pkgPrice ->
+                        navigateTo(Screen.PACKAGE_INCLUSIONS) {
+                            selectedPackageTitle = pkgTitle
+                            selectedPackagePrice = pkgPrice
+                        }
+                    }
+                )
+
+                Screen.PACKAGE_INCLUSIONS -> PackageInclusionsScreen(
+                    packageTitle = selectedPackageTitle,
+                    packagePrice = selectedPackagePrice,
+                    onBack = {
+                        navigateTo(Screen.SERVICE_DETAIL)
                     }
                 )
 

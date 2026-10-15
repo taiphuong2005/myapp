@@ -79,16 +79,17 @@ data class ServiceItem(
 fun HomeScreen(
     userName: String = "Nguyễn Trần Tài Phương",
     location: String = "Tuy Hòa, Phú Yên",
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onSelectService: (String) -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedBottomTab by remember { mutableIntStateOf(0) }
 
     // 100% Vietnamese Service Titles matching the 12 design grid icons
     val serviceList = listOf(
-        ServiceItem("Dịch vụ xe", Icons.Default.Build),
+        ServiceItem("Dịch vụ chăm sóc xe", Icons.Default.Build),
         ServiceItem("Lốp & Mâm xe", Icons.Default.Speed),
-        ServiceItem("Gò má & Sơn xe", Icons.Default.FormatPaint),
+        ServiceItem("Sơn xe", Icons.Default.FormatPaint),
         ServiceItem("Sửa điều hòa", Icons.Default.AcUnit),
         ServiceItem("Chăm sóc & Dọn xe", Icons.Default.LocalCarWash),
         ServiceItem("Ắc quy ô tô", Icons.Default.ElectricCar),
@@ -352,7 +353,7 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(96.dp)
-                                    .clickable { /* Select service */ },
+                                    .clickable { onSelectService(item.title) },
                                 shape = RoundedCornerShape(12.dp),
                                 colors = CardDefaults.cardColors(containerColor = Color.White),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)

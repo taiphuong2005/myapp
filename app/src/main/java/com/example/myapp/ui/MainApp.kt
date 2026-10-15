@@ -1,48 +1,87 @@
 package com.example.myapp.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.myapp.ui.screens.ForgotPasswordScreen
+import com.example.myapp.ui.screens.HomeScreen
 import com.example.myapp.ui.screens.LoginScreen
 import com.example.myapp.ui.screens.OtpScreen
 import com.example.myapp.ui.screens.RegisterScreen
 import com.example.myapp.ui.screens.ResetPasswordScreen
 import com.example.myapp.ui.theme.MyappTheme
+import com.example.myapp.ui.theme.PrimaryBlue
 import com.example.myapp.ui.theme.ScreenBackground
+import com.example.myapp.ui.theme.TextDark
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 enum class Screen {
     LOGIN,
     REGISTER,
     FORGOT_PASSWORD,
     OTP,
-    RESET_PASSWORD
+    RESET_PASSWORD,
+    HOME
 }
 
 @Composable
 fun MainApp() {
+    val scope = rememberCoroutineScope()
     var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
     var userEmailForReset by remember { mutableStateOf("") }
+    var loggedInUserName by remember { mutableStateOf("Nguyễn Trần Tài Phương") }
+    var isNavigating by remember { mutableStateOf(false) }
+
+    fun navigateTo(target: Screen, actionBeforeNav: () -> Unit = {}) {
+        if (isNavigating) return
+        scope.launch {
+            isNavigating = true
+            actionBeforeNav()
+            delay(500) // Smooth loading transition duration
+            currentScreen = target
+            isNavigating = false
+        }
+    }
 
     // Handle system back button press
-    BackHandler(enabled = currentScreen != Screen.LOGIN) {
-        currentScreen = when (currentScreen) {
+    BackHandler(enabled = (currentScreen != Screen.LOGIN && currentScreen != Screen.HOME) && !isNavigating) {
+        val previousScreen = when (currentScreen) {
             Screen.REGISTER -> Screen.LOGIN
             Screen.FORGOT_PASSWORD -> Screen.LOGIN
             Screen.OTP -> Screen.FORGOT_PASSWORD
             Screen.RESET_PASSWORD -> Screen.OTP
+            Screen.HOME -> Screen.LOGIN
             Screen.LOGIN -> Screen.LOGIN
         }
+        navigateTo(previousScreen)
     }
 
     Scaffold { innerPadding ->
@@ -53,55 +92,98 @@ fun MainApp() {
                 .background(ScreenBackground)
         ) {
             when (currentScreen) {
+                Screen.HOME -> HomeScreen(
+                    userName = loggedInUserName,
+                    onLogout = {
+                        navigateTo(Screen.LOGIN)
+                    }
+                )
+
                 Screen.LOGIN -> LoginScreen(
                     onNavigateToRegister = {
-                        currentScreen = Screen.REGISTER
+                        navigateTo(Screen.REGISTER)
                     },
                     onNavigateToForgotPassword = {
-                        currentScreen = Screen.FORGOT_PASSWORD
+                        navigateTo(Screen.FORGOT_PASSWORD)
                     },
                     onLoginSuccess = { user ->
-                        // Navigate or perform action after successful login
+                        navigateTo(Screen.HOME) {
+                            loggedInUserName = if (user.name.isNotBlank()) user.name else "Nguyễn Trần Tài Phương"
+                        }
                     }
                 )
 
                 Screen.REGISTER -> RegisterScreen(
                     onNavigateToLogin = {
-                        currentScreen = Screen.LOGIN
+                        navigateTo(Screen.LOGIN)
                     },
                     onRegisterSuccess = {
-                        currentScreen = Screen.LOGIN
+                        navigateTo(Screen.LOGIN)
                     }
                 )
 
                 Screen.FORGOT_PASSWORD -> ForgotPasswordScreen(
                     onBack = {
-                        currentScreen = Screen.LOGIN
+                        navigateTo(Screen.LOGIN)
                     },
                     onNavigateToOtp = { emailOrPhone ->
-                        userEmailForReset = emailOrPhone
-                        currentScreen = Screen.OTP
+                        navigateTo(Screen.OTP) {
+                            userEmailForReset = emailOrPhone
+                        }
                     }
                 )
 
                 Screen.OTP -> OtpScreen(
                     onBack = {
-                        currentScreen = Screen.FORGOT_PASSWORD
+                        navigateTo(Screen.FORGOT_PASSWORD)
                     },
                     onNavigateToResetPassword = {
-                        currentScreen = Screen.RESET_PASSWORD
+                        navigateTo(Screen.RESET_PASSWORD)
                     }
                 )
 
                 Screen.RESET_PASSWORD -> ResetPasswordScreen(
                     emailOrPhone = userEmailForReset,
                     onBack = {
-                        currentScreen = Screen.OTP
+                        navigateTo(Screen.OTP)
                     },
                     onResetSuccess = {
-                        currentScreen = Screen.LOGIN
+                        navigateTo(Screen.LOGIN)
                     }
                 )
+            }
+
+            // Loading Animation Overlay when switching screens
+            AnimatedVisibility(
+                visible = isNavigating,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White.copy(alpha = 0.88f))
+                        .clickable(enabled = false) {}, // Block clicks during transition
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = PrimaryBlue,
+                            strokeWidth = 4.dp,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Đang tải...",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextDark
+                        )
+                    }
+                }
             }
         }
     }

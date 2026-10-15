@@ -67,8 +67,8 @@ fun LoginScreen(
     val context = LocalContext.current
     val dbHelper = remember { UserDatabaseHelper(context) }
 
-    var emailOrPhone by remember { mutableStateOf("nguyentrantaiphuong@gmail.com") }
-    var password by remember { mutableStateOf("12345678") }
+    var emailOrPhone by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     fun openSocialLogin(url: String) {

@@ -8,8 +8,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -44,7 +46,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
@@ -350,6 +351,31 @@ fun OtpInputField(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun LoadingOverlayScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White.copy(alpha = 0.92f))
+            .clickable(enabled = false) {},
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(PrimaryBlue.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = PrimaryBlue,
+                strokeWidth = 4.dp,
+                modifier = Modifier.size(52.dp)
+            )
         }
     }
 }
